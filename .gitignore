@@ -80,3 +80,5 @@ coverage/
 jacoco.exec
 *.ec
 *.exec
+
+HELP.md
