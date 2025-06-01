@@ -3,16 +3,14 @@ package com.alexpantoja.prueba_inditex.application.service;
 import com.alexpantoja.prueba_inditex.domain.model.Price;
 import com.alexpantoja.prueba_inditex.domain.repository.PriceRepository;
 import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+@RequiredArgsConstructor
 @Service
 public class PriceQueryService {
 
   private final PriceRepository priceRepository;
-
-  public PriceQueryService(PriceRepository priceRepository) {
-    this.priceRepository = priceRepository;
-  }
 
   public Price getApplicablePrice(Long productId, Long brandId, LocalDateTime applicationDate) {
     return priceRepository
