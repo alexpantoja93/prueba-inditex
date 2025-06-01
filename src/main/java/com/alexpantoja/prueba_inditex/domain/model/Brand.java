@@ -7,6 +7,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Brand {
-    private Long brandId;
-    private String description;
+  private Long brandId;
+  private String description;
 }

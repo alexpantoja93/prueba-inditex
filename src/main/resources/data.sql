@@ -1,4 +1,4 @@
-INSERT INTO brands (description) VALUES ('ZARA');
+INSERT INTO brands (brand_id, description) VALUES (1, 'ZARA');
 
 INSERT INTO prices (
     brand_id, start_date, end_date, price_list, product_id, priority, price, curr

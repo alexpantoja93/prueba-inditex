@@ -8,6 +8,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.alexpantoja.prueba_inditex.application.service.PriceQueryService;
 import com.alexpantoja.prueba_inditex.domain.model.Brand;
 import com.alexpantoja.prueba_inditex.domain.model.Price;
+import com.alexpantoja.prueba_inditex.infrastructure.rest.dto.PriceResponse;
+import com.alexpantoja.prueba_inditex.infrastructure.rest.mapper.PriceResponseMapper;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,8 @@ public class PriceControllerTest {
   @Autowired private MockMvc mockMvc;
 
   @MockBean private PriceQueryService priceQueryService;
+
+  @MockBean private PriceResponseMapper priceResponseMapper;
 
   @Test
   void test1_shouldReturnPriceAt_2020_06_14_10_00() throws Exception {
@@ -65,8 +69,19 @@ public class PriceControllerTest {
             .curr("EUR")
             .build();
 
+    PriceResponse mockResponse =
+        PriceResponse.builder()
+            .productId(productId)
+            .brandId((long) brandId)
+            .rateCode(rateCode)
+            .applicationDate(applicationDate)
+            .price(price)
+            .build();
+
     when(priceQueryService.getApplicablePrice(productId, (long) brandId, applicationDate))
         .thenReturn(mockPrice);
+
+    when(priceResponseMapper.toResponse(mockPrice)).thenReturn(mockResponse);
 
     mockMvc
         .perform(
@@ -75,10 +90,10 @@ public class PriceControllerTest {
                 .param("product_id", String.valueOf(productId))
                 .param("brand_id", String.valueOf(brandId)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.product_id").value(productId))
-        .andExpect(jsonPath("$.brand_id").value(brandId))
-        .andExpect(jsonPath("$.rate_code").value(rateCode))
-        .andExpect(jsonPath("$.application_date").value(dateTimeStr))
+        .andExpect(jsonPath("$.productId").value(productId))
+        .andExpect(jsonPath("$.brandId").value(brandId))
+        .andExpect(jsonPath("$.rateCode").value(rateCode))
+        .andExpect(jsonPath("$.applicationDate").value(dateTimeStr))
         .andExpect(jsonPath("$.price").value(price));
   }
 }

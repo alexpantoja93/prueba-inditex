@@ -2,6 +2,17 @@ package com.alexpantoja.prueba_inditex.infrastructure.rest.controller;
 
 import com.alexpantoja.prueba_inditex.application.service.PriceQueryService;
 import com.alexpantoja.prueba_inditex.domain.model.Price;
+import com.alexpantoja.prueba_inditex.infrastructure.rest.dto.PriceResponse;
+import com.alexpantoja.prueba_inditex.infrastructure.rest.mapper.PriceResponseMapper;
+import java.time.LocalDateTime;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,33 +20,54 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
-import java.util.Map;
-
+@RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/prices")
 public class PriceController {
 
-    private final PriceQueryService priceQueryService;
+  private final PriceQueryService priceQueryService;
+  private final PriceResponseMapper priceResponseMapper;
 
-    public PriceController(PriceQueryService priceQueryService) {
-        this.priceQueryService = priceQueryService;
+  @Operation(
+      summary = "Get applicable price",
+      description =
+          "Returns the applicable price based on product ID, brand ID, and application date")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Price found",
+            content = {
+              @Content(
+                  mediaType = "application/json",
+                  schema = @Schema(implementation = PriceResponse.class))
+            }),
+        @ApiResponse(
+            responseCode = "404",
+            description = "No applicable price found",
+            content = @Content)
+      })
+  @GetMapping
+  public ResponseEntity<PriceResponse> getPrice(
+      @Parameter(
+              description = "Date and time of application (e.g. 2020-06-14T10:00:00)",
+              required = true)
+          @RequestParam("application_date")
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+          LocalDateTime applicationDate,
+      @Parameter(description = "ID of the product", required = true) @RequestParam("product_id")
+          Long productId,
+      @Parameter(description = "ID of the brand", required = true) @RequestParam("brand_id")
+          Long brandId) {
+    Price price = priceQueryService.getApplicablePrice(productId, brandId, applicationDate);
+
+    if (price.getBrand() == null) {
+      return ResponseEntity.internalServerError().build();
     }
 
-    @GetMapping
-    public ResponseEntity<Map<String, Object>> getPrice(
-            @RequestParam("application_date") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime applicationDate,
-            @RequestParam("product_id") Long productId,
-            @RequestParam("brand_id") Long brandId
-    ) {
-        Price price = priceQueryService.getApplicablePrice(productId, brandId, applicationDate);
+    PriceResponse response =
+        priceResponseMapper.toResponse(price).toBuilder().applicationDate(applicationDate).build();
 
-        return ResponseEntity.ok(Map.of(
-                "product_id", price.getProductId(),
-                "brand_id", price.getBrand().getBrandId(),
-                "rate_code", price.getPriceList(),
-                "application_date", applicationDate,
-                "price", price.getPrice()
-        ));
-    }
+    return ResponseEntity.ok(response);
+  }
 }
