@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("/api/prices")
@@ -59,10 +61,16 @@ public class PriceController {
           Long productId,
       @Parameter(description = "ID of the brand", required = true) @RequestParam("brand_id")
           Long brandId) {
-    return priceQueryService
-        .getApplicablePrice(new BrandId(brandId), new ProductId(productId), applicationDate)
-        .map(priceResponseMapper::toResponse)
-        .map(ResponseEntity::ok)
-        .orElse(ResponseEntity.notFound().build());
+
+    log.info(
+        "Solicitud recibida GET /api/prices con productId={}, brandId={}, applicationDate={}",
+        productId,
+        brandId,
+        applicationDate);
+
+    var price =
+        priceQueryService.getApplicablePrice(
+            new BrandId(brandId), new ProductId(productId), applicationDate);
+    return ResponseEntity.ok(priceResponseMapper.toResponse(price));
   }
 }

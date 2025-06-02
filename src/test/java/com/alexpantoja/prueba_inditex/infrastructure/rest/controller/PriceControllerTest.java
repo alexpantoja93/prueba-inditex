@@ -6,13 +6,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.alexpantoja.prueba_inditex.application.service.PriceQueryService;
+import com.alexpantoja.prueba_inditex.domain.exception.PriceNotFoundException;
 import com.alexpantoja.prueba_inditex.domain.model.Price;
 import com.alexpantoja.prueba_inditex.domain.model.valueobject.*;
 import com.alexpantoja.prueba_inditex.infrastructure.rest.dto.PriceResponse;
 import com.alexpantoja.prueba_inditex.infrastructure.rest.mapper.PriceResponseMapper;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -86,7 +86,7 @@ public class PriceControllerTest {
 
     when(priceQueryService.getApplicablePrice(
             new BrandId((long) brandIdRaw), new ProductId(productIdRaw), applicationDate))
-        .thenReturn(Optional.of(mockPrice));
+        .thenReturn((mockPrice));
 
     when(priceResponseMapper.toResponse(mockPrice)).thenReturn(mockResponse);
 
@@ -102,5 +102,30 @@ public class PriceControllerTest {
         .andExpect(jsonPath("$.rateCode").value(rateCode))
         .andExpect(jsonPath("$.applicationDate").value(dateTimeStr))
         .andExpect(jsonPath("$.startDate").value(expectedStartDate));
+  }
+
+  @Test
+  void shouldReturn404WhenPriceNotFound() throws Exception {
+    // Arrange
+    String dateTimeStr = "2020-06-17T10:00:00";
+    int brandIdRaw = 1;
+    long productIdRaw = 99999L;
+    LocalDateTime applicationDate = LocalDateTime.parse(dateTimeStr);
+
+    when(priceQueryService.getApplicablePrice(
+            new BrandId((long) brandIdRaw), new ProductId(productIdRaw), applicationDate))
+        .thenThrow(new PriceNotFoundException(productIdRaw, (long) brandIdRaw, applicationDate));
+
+    // Act + Assert
+    mockMvc
+        .perform(
+            get("/api/prices")
+                .param("application_date", dateTimeStr)
+                .param("product_id", String.valueOf(productIdRaw))
+                .param("brand_id", String.valueOf(brandIdRaw)))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.status").value(404))
+        .andExpect(jsonPath("$.error").value("Not Found"))
+        .andExpect(jsonPath("$.message").exists());
   }
 }

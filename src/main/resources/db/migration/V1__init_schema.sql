@@ -12,6 +12,6 @@ CREATE TABLE prices (
     product_id BIGINT NOT NULL,
     priority INT NOT NULL,
     price DECIMAL(10, 2) NOT NULL,
-    curr CHAR(3) NOT NULL,
+    curr VARCHAR(3) NOT NULL,
     CONSTRAINT fk_brand FOREIGN KEY (brand_id) REFERENCES brands(brand_id)
 );

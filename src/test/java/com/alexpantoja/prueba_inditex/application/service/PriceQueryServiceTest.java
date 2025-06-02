@@ -3,6 +3,7 @@ package com.alexpantoja.prueba_inditex.application.service;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.alexpantoja.prueba_inditex.domain.exception.PriceNotFoundException;
 import com.alexpantoja.prueba_inditex.domain.model.Price;
 import com.alexpantoja.prueba_inditex.domain.model.valueobject.*;
 import com.alexpantoja.prueba_inditex.domain.repository.PriceRepository;
@@ -40,11 +41,9 @@ public class PriceQueryServiceTest {
     when(priceRepository.findApplicablePrice(brandId, productId, applicationDate))
         .thenReturn(Optional.of(expectedPrice));
 
-    Optional<Price> result =
-        priceQueryService.getApplicablePrice(brandId, productId, applicationDate);
+    Price result = priceQueryService.getApplicablePrice(brandId, productId, applicationDate);
 
-    assertTrue(result.isPresent());
-    assertEquals(expectedPrice, result.get());
+    assertEquals(expectedPrice, result);
   }
 
   @Test
@@ -56,9 +55,8 @@ public class PriceQueryServiceTest {
     when(priceRepository.findApplicablePrice(brandId, productId, applicationDate))
         .thenReturn(Optional.empty());
 
-    Optional<Price> result =
-        priceQueryService.getApplicablePrice(brandId, productId, applicationDate);
-
-    assertTrue(result.isEmpty());
+    assertThrows(
+        PriceNotFoundException.class,
+        () -> priceQueryService.getApplicablePrice(brandId, productId, applicationDate));
   }
 }
