@@ -1,17 +1,17 @@
 package com.alexpantoja.prueba_inditex.infrastructure.rest.controller;
 
 import com.alexpantoja.prueba_inditex.application.service.PriceQueryService;
-import com.alexpantoja.prueba_inditex.domain.model.Price;
+import com.alexpantoja.prueba_inditex.domain.model.valueobject.BrandId;
+import com.alexpantoja.prueba_inditex.domain.model.valueobject.ProductId;
 import com.alexpantoja.prueba_inditex.infrastructure.rest.dto.PriceResponse;
 import com.alexpantoja.prueba_inditex.infrastructure.rest.mapper.PriceResponseMapper;
-import java.time.LocalDateTime;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -59,15 +59,10 @@ public class PriceController {
           Long productId,
       @Parameter(description = "ID of the brand", required = true) @RequestParam("brand_id")
           Long brandId) {
-    Price price = priceQueryService.getApplicablePrice(productId, brandId, applicationDate);
-
-    if (price.getBrand() == null) {
-      return ResponseEntity.internalServerError().build();
-    }
-
-    PriceResponse response =
-        priceResponseMapper.toResponse(price).toBuilder().applicationDate(applicationDate).build();
-
-    return ResponseEntity.ok(response);
+    return priceQueryService
+        .getApplicablePrice(new BrandId(brandId), new ProductId(productId), applicationDate)
+        .map(priceResponseMapper::toResponse)
+        .map(ResponseEntity::ok)
+        .orElse(ResponseEntity.notFound().build());
   }
 }

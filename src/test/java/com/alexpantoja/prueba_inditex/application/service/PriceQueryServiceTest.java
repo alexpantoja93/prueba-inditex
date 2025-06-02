@@ -1,69 +1,64 @@
 package com.alexpantoja.prueba_inditex.application.service;
 
-import com.alexpantoja.prueba_inditex.domain.model.Brand;
-import com.alexpantoja.prueba_inditex.domain.model.Price;
-import com.alexpantoja.prueba_inditex.domain.repository.PriceRepository;
-import org.junit.jupiter.api.Test;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import com.alexpantoja.prueba_inditex.domain.model.Price;
+import com.alexpantoja.prueba_inditex.domain.model.valueobject.*;
+import com.alexpantoja.prueba_inditex.domain.repository.PriceRepository;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 public class PriceQueryServiceTest {
 
-  private final PriceRepository priceRepository = mock(PriceRepository.class);
-  private final PriceQueryService priceQueryService = new PriceQueryService(priceRepository);
+  private PriceRepository priceRepository;
+  private PriceQueryService priceQueryService;
 
-  @Test
-  void shouldReturnPriceWhenAvailable() {
-
-    Long productId = 35455L;
-    Long brandId = 1L;
-    LocalDateTime applicationDate = LocalDateTime.of(2020, 6, 14, 10, 0);
-
-    Price mockPrice =
-        Price.builder()
-            .productId(productId)
-            .brand(Brand.builder().brandId(brandId).description("ZARA").build())
-            .priceList(1)
-            .price(BigDecimal.valueOf(35.50))
-            .startDate(LocalDateTime.of(2020, 6, 14, 0, 0))
-            .endDate(LocalDateTime.of(2020, 12, 31, 23, 59))
-            .priority(0)
-            .curr("EUR")
-            .build();
-
-    when(priceRepository.findApplicablePrice(productId, brandId, applicationDate))
-        .thenReturn(Optional.of(mockPrice));
-
-    Price result = priceQueryService.getApplicablePrice(productId, brandId, applicationDate);
-
-    assertNotNull(result);
-    assertEquals(BigDecimal.valueOf(35.50), result.getPrice());
-    assertEquals(brandId, result.getBrand().getBrandId());
-    verify(priceRepository).findApplicablePrice(productId, brandId, applicationDate);
+  @BeforeEach
+  void setUp() {
+    priceRepository = mock(PriceRepository.class);
+    priceQueryService = new PriceQueryService(priceRepository);
   }
 
   @Test
-  void shouldThrowExceptionWhenNoPriceFound() {
+  void shouldReturnPriceIfExists() {
+    BrandId brandId = new BrandId(1L);
+    ProductId productId = new ProductId(35455L);
+    LocalDateTime applicationDate = LocalDateTime.now();
+    Price expectedPrice =
+        new Price(
+            new PriceId(1L),
+            brandId,
+            productId,
+            1,
+            new Money(new BigDecimal("35.50"), "EUR"),
+            new DateRange(applicationDate.minusDays(1), applicationDate.plusDays(1)));
 
-    Long productId = 99999L;
-    Long brandId = 1L;
+    when(priceRepository.findApplicablePrice(brandId, productId, applicationDate))
+        .thenReturn(Optional.of(expectedPrice));
+
+    Optional<Price> result =
+        priceQueryService.getApplicablePrice(brandId, productId, applicationDate);
+
+    assertTrue(result.isPresent());
+    assertEquals(expectedPrice, result.get());
+  }
+
+  @Test
+  void shouldReturnEmptyIfNoPriceFound() {
+    BrandId brandId = new BrandId(1L);
+    ProductId productId = new ProductId(35455L);
     LocalDateTime applicationDate = LocalDateTime.now();
 
-    when(priceRepository.findApplicablePrice(productId, brandId, applicationDate))
+    when(priceRepository.findApplicablePrice(brandId, productId, applicationDate))
         .thenReturn(Optional.empty());
 
-    RuntimeException exception =
-        assertThrows(
-            RuntimeException.class,
-            () -> {
-              priceQueryService.getApplicablePrice(productId, brandId, applicationDate);
-            });
+    Optional<Price> result =
+        priceQueryService.getApplicablePrice(brandId, productId, applicationDate);
 
-    assertEquals("No price found", exception.getMessage());
+    assertTrue(result.isEmpty());
   }
 }

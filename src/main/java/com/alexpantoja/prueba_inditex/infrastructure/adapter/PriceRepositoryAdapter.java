@@ -1,6 +1,8 @@
 package com.alexpantoja.prueba_inditex.infrastructure.adapter;
 
 import com.alexpantoja.prueba_inditex.domain.model.Price;
+import com.alexpantoja.prueba_inditex.domain.model.valueobject.BrandId;
+import com.alexpantoja.prueba_inditex.domain.model.valueobject.ProductId;
 import com.alexpantoja.prueba_inditex.domain.repository.PriceRepository;
 import com.alexpantoja.prueba_inditex.infrastructure.persistence.mapper.PriceMapper;
 import com.alexpantoja.prueba_inditex.infrastructure.persistence.repository.JpaPriceRepository;
@@ -18,10 +20,10 @@ public class PriceRepositoryAdapter implements PriceRepository {
 
   @Override
   public Optional<Price> findApplicablePrice(
-      Long productId, Long brandId, LocalDateTime applicationDate) {
+      BrandId brandId, ProductId productId, LocalDateTime applicationDate) {
     return jpaPriceRepository
         .findTopByProductIdAndBrand_BrandIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByPriorityDesc(
-            productId, brandId, applicationDate, applicationDate)
+            productId.value(), brandId.value(), applicationDate, applicationDate)
         .map(priceMapper::toDomain);
   }
 }

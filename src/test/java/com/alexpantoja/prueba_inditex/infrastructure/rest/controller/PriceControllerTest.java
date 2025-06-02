@@ -6,12 +6,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.alexpantoja.prueba_inditex.application.service.PriceQueryService;
-import com.alexpantoja.prueba_inditex.domain.model.Brand;
 import com.alexpantoja.prueba_inditex.domain.model.Price;
+import com.alexpantoja.prueba_inditex.domain.model.valueobject.*;
 import com.alexpantoja.prueba_inditex.infrastructure.rest.dto.PriceResponse;
 import com.alexpantoja.prueba_inditex.infrastructure.rest.mapper.PriceResponseMapper;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -29,57 +30,63 @@ public class PriceControllerTest {
 
   @Test
   void test1_shouldReturnPriceAt_2020_06_14_10_00() throws Exception {
-    simulateRequest("2020-06-14T10:00:00", 1, 35455, 1, BigDecimal.valueOf(35.50));
+    simulateRequest(
+        "2020-06-14T10:00:00", 1, 35455, 1, BigDecimal.valueOf(35.50), "2020-06-14T09:00:00");
   }
 
   @Test
   void test2_shouldReturnPriceAt_2020_06_14_16_00() throws Exception {
-    simulateRequest("2020-06-14T16:00:00", 1, 35455, 2, BigDecimal.valueOf(25.45));
+    simulateRequest(
+        "2020-06-14T16:00:00", 1, 35455, 2, BigDecimal.valueOf(25.45), "2020-06-14T15:00:00");
   }
 
   @Test
   void test3_shouldReturnPriceAt_2020_06_14_21_00() throws Exception {
-    simulateRequest("2020-06-14T21:00:00", 1, 35455, 1, BigDecimal.valueOf(35.50));
+    simulateRequest(
+        "2020-06-14T21:00:00", 1, 35455, 1, BigDecimal.valueOf(35.50), "2020-06-14T20:00:00");
   }
 
   @Test
   void test4_shouldReturnPriceAt_2020_06_15_10_00() throws Exception {
-    simulateRequest("2020-06-15T10:00:00", 1, 35455, 3, BigDecimal.valueOf(30.50));
+    simulateRequest(
+        "2020-06-15T10:00:00", 1, 35455, 3, BigDecimal.valueOf(30.50), "2020-06-15T09:00:00");
   }
 
   @Test
   void test5_shouldReturnPriceAt_2020_06_16_21_00() throws Exception {
-    simulateRequest("2020-06-16T21:00:00", 1, 35455, 4, BigDecimal.valueOf(38.95));
+    simulateRequest(
+        "2020-06-16T21:00:00", 1, 35455, 4, BigDecimal.valueOf(38.95), "2020-06-16T20:00:00");
   }
 
   private void simulateRequest(
-      String dateTimeStr, int brandId, long productId, int rateCode, BigDecimal price)
+      String dateTimeStr,
+      int brandIdRaw,
+      long productIdRaw,
+      int rateCode,
+      BigDecimal price,
+      String expectedStartDate)
       throws Exception {
+
     LocalDateTime applicationDate = LocalDateTime.parse(dateTimeStr);
+    LocalDateTime startDate = LocalDateTime.parse(expectedStartDate);
+    LocalDateTime endDate = applicationDate.plusHours(1);
 
     Price mockPrice =
-        Price.builder()
-            .productId(productId)
-            .brand(Brand.builder().brandId((long) brandId).description("ZARA").build())
-            .priceList(rateCode)
-            .price(price)
-            .startDate(applicationDate.minusHours(1))
-            .endDate(applicationDate.plusHours(1))
-            .priority(0)
-            .curr("EUR")
-            .build();
+        Price.of(
+            new PriceId(1L),
+            new BrandId((long) brandIdRaw),
+            new ProductId(productIdRaw),
+            0,
+            new Money(price, "EUR"),
+            new DateRange(startDate, endDate));
 
     PriceResponse mockResponse =
-        PriceResponse.builder()
-            .productId(productId)
-            .brandId((long) brandId)
-            .rateCode(rateCode)
-            .applicationDate(applicationDate)
-            .price(price)
-            .build();
+        new PriceResponse(
+            productIdRaw, (long) brandIdRaw, rateCode, applicationDate, startDate, endDate, price);
 
-    when(priceQueryService.getApplicablePrice(productId, (long) brandId, applicationDate))
-        .thenReturn(mockPrice);
+    when(priceQueryService.getApplicablePrice(
+            new BrandId((long) brandIdRaw), new ProductId(productIdRaw), applicationDate))
+        .thenReturn(Optional.of(mockPrice));
 
     when(priceResponseMapper.toResponse(mockPrice)).thenReturn(mockResponse);
 
@@ -87,13 +94,13 @@ public class PriceControllerTest {
         .perform(
             get("/api/prices")
                 .param("application_date", dateTimeStr)
-                .param("product_id", String.valueOf(productId))
-                .param("brand_id", String.valueOf(brandId)))
+                .param("product_id", String.valueOf(productIdRaw))
+                .param("brand_id", String.valueOf(brandIdRaw)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.productId").value(productId))
-        .andExpect(jsonPath("$.brandId").value(brandId))
+        .andExpect(jsonPath("$.productId").value(productIdRaw))
+        .andExpect(jsonPath("$.brandId").value(brandIdRaw))
         .andExpect(jsonPath("$.rateCode").value(rateCode))
         .andExpect(jsonPath("$.applicationDate").value(dateTimeStr))
-        .andExpect(jsonPath("$.price").value(price));
+        .andExpect(jsonPath("$.startDate").value(expectedStartDate));
   }
 }
