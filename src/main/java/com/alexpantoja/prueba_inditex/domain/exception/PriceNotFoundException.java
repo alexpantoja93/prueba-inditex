@@ -5,7 +5,7 @@ import java.time.LocalDateTime;
 public class PriceNotFoundException extends RuntimeException {
   public PriceNotFoundException(Long productId, Long brandId, LocalDateTime applicationDate) {
     super(
-        "No se encontró precio para productId="
+        "Price Not Found of="
             + productId
             + ", brandId="
             + brandId
