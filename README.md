@@ -1,17 +1,27 @@
 # Prueba Inditex – Consulta de precios
 
-Este microservicio permite consultar el precio aplicable de un producto de una cadena (por ejemplo, ZARA) en una fecha determinada.
+Este microservicio permite consultar el precio aplicable de un producto de una cadena (por ejemplo, ZARA) en una fecha
+determinada.
 
-## 🧱 Tecnologías utilizadas
+## 🚀 Tecnologías utilizadas
 
 - Java 17
 - Spring Boot 3.5.0
-- Arquitectura Hexagonal (DDD)
-- Spring WebFlux
-- JPA + H2 en memoria
-- Flyway para migración de base de datos
-- Lombok
-- JUnit + Mockito
+- Spring Web + JPA (Hibernate)
+- H2 Database (runtime en memoria)
+- Lombok y MapStruct
+- Flyway (para migraciones)
+- Springdoc OpenAPI (Swagger UI)
+- JUnit 5 + Mockito
+
+---
+
+## 🧱 Arquitectura
+
+- Arquitectura Hexagonal
+- Separación por capas: domain, application, infrastructure
+- Value Objects y Aggregate Roots
+- Mapeo entre entidades y DTOs con MapStruct
 
 ---
 
@@ -23,11 +33,11 @@ Consulta el precio aplicable de un producto para una marca y una fecha dada.
 
 #### 🔸 Parámetros (query params):
 
-| Nombre            | Tipo        | Descripción                          | Ejemplo                       |
-|-------------------|-------------|--------------------------------------|-------------------------------|
-| `application_date`| `ISO_DATE_TIME` | Fecha y hora a consultar             | `2020-06-14T10:00:00`         |
-| `product_id`      | `Long`      | Código del producto                   | `35455`                       |
-| `brand_id`        | `Long`      | ID de la marca (por ejemplo, ZARA = 1)| `1`                          |
+| Nombre             | Tipo            | Descripción                            | Ejemplo               |
+|--------------------|-----------------|----------------------------------------|-----------------------|
+| `application_date` | `ISO_DATE_TIME` | Fecha y hora a consultar               | `2020-06-14T10:00:00` |
+| `product_id`       | `Long`          | Código del producto                    | `35455`               |
+| `brand_id`         | `Long`          | ID de la marca (por ejemplo, ZARA = 1) | `1`                   |
 
 ---
 
@@ -78,12 +88,47 @@ Los siguientes casos están cubiertos con pruebas unitarias:
 
 ---
 
+
+
+## 📦 Construcción del proyecto
+
+```bash
+./mvnw clean install
+```
+
+---
+
 ## 🚀 Instrucciones para ejecutar
 
 ```bash
 mvn clean spring-boot:run
 ```
+---
+## 🧪 Ejecución de tests
 
+```bash
+./mvnw test
+```
+
+---
+El proyecto contiene tres niveles de pruebas:
+- ✅ Unitarias: servicios aislados con Mockito (`@ExtendWith(MockitoExtension.class)`)
+- 🔄 Integración: pruebas con base de datos en memoria (H2)
+- 🌐 Sistema (E2E): llamadas a endpoints REST usando MockMvc
+---
+## 📄 Documentación API
+Al ejecutar la aplicación, accede a:
+```
+http://localhost:8080/swagger-ui.html
+```
+---
+
+## 📁 Scripts de base de datos
+Flyway ejecuta los scripts ubicados en:
+```
+src/main/resources/db/migration
+```
+---
 Para acceder a la consola H2:
 
 - URL: `http://localhost:8080/h2-console`
@@ -92,6 +137,10 @@ Para acceder a la consola H2:
 
 ---
 
+## 🛠 Requisitos
+- Java 17
+- Maven 3.9+
+---
 ## ✍️ Autor
 
 Alex Pantoja – Tech Lead Backend  
