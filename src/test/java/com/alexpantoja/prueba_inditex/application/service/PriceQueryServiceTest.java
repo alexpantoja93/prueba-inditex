@@ -1,6 +1,7 @@
 package com.alexpantoja.prueba_inditex.application.service;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 import com.alexpantoja.prueba_inditex.domain.exception.PriceNotFoundException;
@@ -11,12 +12,17 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-public class PriceQueryServiceTest {
+class PriceQueryServiceTest {
 
   private PriceRepository priceRepository;
   private PriceQueryService priceQueryService;
+
+  private static final BrandId BRAND_ID = new BrandId(1L);
+  private static final ProductId PRODUCT_ID = new ProductId(35455L);
+  private static final LocalDateTime NOW = LocalDateTime.of(2025, 6, 2, 10, 0);
 
   @BeforeEach
   void setUp() {
@@ -25,38 +31,36 @@ public class PriceQueryServiceTest {
   }
 
   @Test
-  void shouldReturnPriceIfExists() {
-    BrandId brandId = new BrandId(1L);
-    ProductId productId = new ProductId(35455L);
-    LocalDateTime applicationDate = LocalDateTime.now();
-    Price expectedPrice =
+  @DisplayName("Returns the price when a valid price exists")
+  void givenExistingPrice_whenQuerying_thenReturnsPrice() {
+    Price expected =
         new Price(
             new PriceId(1L),
-            brandId,
-            productId,
+            BRAND_ID,
+            PRODUCT_ID,
             1,
             new Money(new BigDecimal("35.50"), "EUR"),
-            new DateRange(applicationDate.minusDays(1), applicationDate.plusDays(1)));
+            new DateRange(NOW.minusDays(1), NOW.plusDays(1)));
 
-    when(priceRepository.findApplicablePrice(brandId, productId, applicationDate))
-        .thenReturn(Optional.of(expectedPrice));
+    when(priceRepository.findApplicablePrice(BRAND_ID, PRODUCT_ID, NOW))
+        .thenReturn(Optional.of(expected));
 
-    Price result = priceQueryService.getApplicablePrice(brandId, productId, applicationDate);
+    Price result = priceQueryService.getApplicablePrice(BRAND_ID, PRODUCT_ID, NOW);
 
-    assertEquals(expectedPrice, result);
+    assertThat(result).isEqualTo(expected);
+    verify(priceRepository).findApplicablePrice(BRAND_ID, PRODUCT_ID, NOW);
   }
 
   @Test
-  void shouldReturnEmptyIfNoPriceFound() {
-    BrandId brandId = new BrandId(1L);
-    ProductId productId = new ProductId(35455L);
-    LocalDateTime applicationDate = LocalDateTime.now();
-
-    when(priceRepository.findApplicablePrice(brandId, productId, applicationDate))
+  @DisplayName("Throws PriceNotFoundException when no applicable price is found")
+  void givenNoMatchingPrice_whenQuerying_thenThrowsPriceNotFoundException() {
+    when(priceRepository.findApplicablePrice(BRAND_ID, PRODUCT_ID, NOW))
         .thenReturn(Optional.empty());
 
-    assertThrows(
-        PriceNotFoundException.class,
-        () -> priceQueryService.getApplicablePrice(brandId, productId, applicationDate));
+    assertThatThrownBy(() -> priceQueryService.getApplicablePrice(BRAND_ID, PRODUCT_ID, NOW))
+        .isInstanceOf(PriceNotFoundException.class)
+        .hasMessageContaining("productId");
+
+    verify(priceRepository).findApplicablePrice(BRAND_ID, PRODUCT_ID, NOW);
   }
 }
