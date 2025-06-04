@@ -32,7 +32,7 @@ class PriceQueryServiceTest {
   @Test
   @DisplayName("Should return the price when found")
   void shouldReturnPriceWhenFound() {
-    Price expected =
+    var expected =
         new Price(
             new PriceId(1L),
             BRAND_ID,
@@ -44,7 +44,7 @@ class PriceQueryServiceTest {
     when(priceRepository.findApplicablePrice(BRAND_ID, PRODUCT_ID, NOW))
         .thenReturn(Optional.of(expected));
 
-    Price result = priceQueryService.getApplicablePrice(BRAND_ID, PRODUCT_ID, NOW);
+    var result = priceQueryService.getApplicablePrice(BRAND_ID, PRODUCT_ID, NOW);
 
     assertThat(result).isEqualTo(expected);
     verify(priceRepository).findApplicablePrice(BRAND_ID, PRODUCT_ID, NOW);
@@ -58,8 +58,7 @@ class PriceQueryServiceTest {
 
     assertThatThrownBy(() -> priceQueryService.getApplicablePrice(BRAND_ID, PRODUCT_ID, NOW))
         .isInstanceOf(PriceNotFoundException.class)
-        .hasMessageContaining("Price Not Found");
+        .hasMessageContaining("No applicable price found");
     verify(priceRepository).findApplicablePrice(BRAND_ID, PRODUCT_ID, NOW);
   }
-
 }

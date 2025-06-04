@@ -1,9 +1,9 @@
 package com.alexpantoja.prueba_inditex.infrastructure.rest.handler;
 
+import com.alexpantoja.prueba_inditex.domain.exception.PriceNotFoundException;
 import java.time.LocalDateTime;
 import java.util.Map;
-
-import com.alexpantoja.prueba_inditex.domain.exception.PriceNotFoundException;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,10 +22,30 @@ public class GlobalExceptionHandler {
     return buildResponse(HttpStatus.NOT_FOUND, "Price Not Found", ex.getMessage());
   }
 
+  @ExceptionHandler(MethodArgumentNotValidException.class)
+  public ResponseEntity<?> handleValidationException(MethodArgumentNotValidException ex) {
+    log.warn("Validation failed: {}", ex.getMessage());
+    var errors =
+        ex.getBindingResult().getFieldErrors().stream()
+            .map(err -> err.getField() + ": " + err.getDefaultMessage())
+            .collect(Collectors.toList());
+
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(
+            Map.of(
+                "timestamp",
+                LocalDateTime.now(),
+                "status",
+                HttpStatus.BAD_REQUEST.value(),
+                "error",
+                "Validation Error",
+                "messages",
+                errors));
+  }
+
   @ExceptionHandler({
     MethodArgumentTypeMismatchException.class,
-    MissingServletRequestParameterException.class,
-    MethodArgumentNotValidException.class
+    MissingServletRequestParameterException.class
   })
   public ResponseEntity<?> handleBadRequest(Exception ex) {
     log.warn("Bad request: {}", ex.getMessage());
@@ -35,6 +55,11 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(Exception.class)
   public ResponseEntity<?> handleGeneralException(Exception ex) {
     log.error("Unexpected error: {}", ex.getMessage(), ex);
+
+    if (ex instanceof PriceNotFoundException pne) {
+      return handlePriceNotFoundException(pne);
+    }
+
     return buildResponse(
         HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", "An unexpected error occurred");
   }

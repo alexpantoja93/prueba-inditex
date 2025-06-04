@@ -69,10 +69,10 @@ class PriceControllerTest {
   @Test
   @DisplayName("Should return 404 when price not found")
   void givenNonExistentProduct_whenRequestingPrice_thenReturn404() throws Exception {
-    String dateTimeStr = "2020-06-17T10:00:00";
-    int brandId = 1;
-    long productId = 99999L;
-    LocalDateTime applicationDate = LocalDateTime.parse(dateTimeStr);
+    var dateTimeStr = "2020-06-17T10:00:00";
+    var brandId = 1;
+    var productId = 99999L;
+    var applicationDate = LocalDateTime.parse(dateTimeStr);
 
     when(priceQueryService.getApplicablePrice(
             new BrandId((long) brandId), new ProductId(productId), applicationDate))
@@ -115,11 +115,11 @@ class PriceControllerTest {
       BigDecimal price,
       String expectedStartDate)
       throws Exception {
-    LocalDateTime applicationDate = LocalDateTime.parse(dateTimeStr);
-    LocalDateTime startDate = LocalDateTime.parse(expectedStartDate);
-    LocalDateTime endDate = applicationDate.plusHours(1);
+    var applicationDate = LocalDateTime.parse(dateTimeStr);
+    var startDate = LocalDateTime.parse(expectedStartDate);
+    var endDate = applicationDate.plusHours(1);
 
-    Price mockPrice =
+    var mockPrice =
         Price.of(
             new PriceId(1L),
             new BrandId((long) brandId),
@@ -128,15 +128,14 @@ class PriceControllerTest {
             new Money(price, "EUR"),
             new DateRange(startDate, endDate));
 
-    PriceResponse mockResponse =
-        new PriceResponse(
-            productId, (long) brandId, rateCode, applicationDate, startDate, endDate, price);
+    var mockResponse =
+        new PriceResponse(productId, (long) brandId, rateCode, applicationDate, price);
 
     when(priceQueryService.getApplicablePrice(
             new BrandId((long) brandId), new ProductId(productId), applicationDate))
         .thenReturn(mockPrice);
 
-    when(priceResponseMapper.toResponse(mockPrice)).thenReturn(mockResponse);
+    when(priceResponseMapper.toResponse(mockPrice, applicationDate)).thenReturn(mockResponse);
 
     mockMvc
         .perform(
@@ -148,7 +147,19 @@ class PriceControllerTest {
         .andExpect(jsonPath("$.productId").value(productId))
         .andExpect(jsonPath("$.brandId").value(brandId))
         .andExpect(jsonPath("$.rateCode").value(rateCode))
-        .andExpect(jsonPath("$.applicationDate").value(dateTimeStr))
-        .andExpect(jsonPath("$.startDate").value(expectedStartDate));
+        .andExpect(jsonPath("$.applicationDate").value(dateTimeStr));
+  }
+
+  @Test
+  @DisplayName("Should return 400 Bad Request when product_id is invalid")
+  void shouldReturnBadRequestWhenProductIdIsInvalid() throws Exception {
+    mockMvc
+        .perform(
+            get(PRICES_ENDPOINT)
+                .param("application_date", "2020-06-14T10:00:00")
+                .param("product_id", "INVALID")
+                .param("brand_id", "1"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error").value("Bad Request"));
   }
 }

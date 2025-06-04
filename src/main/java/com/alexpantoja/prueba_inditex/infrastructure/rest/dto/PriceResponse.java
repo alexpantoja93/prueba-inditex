@@ -8,7 +8,5 @@ public record PriceResponse(
         Long brandId,
         Integer rateCode,
         LocalDateTime applicationDate,
-        LocalDateTime startDate,
-        LocalDateTime endDate,
         BigDecimal price
 ) {}

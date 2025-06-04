@@ -23,7 +23,11 @@ public class PriceRepositoryAdapter implements PriceRepository {
   @Override
   public Optional<Price> findApplicablePrice(
       BrandId brandId, ProductId productId, LocalDateTime applicationDate) {
-    log.debug("Llamando a PriceJpaRepository con parámetros: ...");
+    log.debug(
+        "Calling JpaPriceRepository with productId={}, brandId={}, date={}",
+        productId.value(),
+        brandId.value(),
+        applicationDate);
     return jpaPriceRepository
         .findTopByProductIdAndBrand_BrandIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByPriorityDesc(
             productId.value(), brandId.value(), applicationDate, applicationDate)

@@ -1,7 +1,6 @@
 package com.alexpantoja.prueba_inditex.infrastructure.persistence.mapper;
 
 import com.alexpantoja.prueba_inditex.domain.model.Price;
-import com.alexpantoja.prueba_inditex.domain.model.valueobject.BrandId;
 import com.alexpantoja.prueba_inditex.domain.model.valueobject.DateRange;
 import com.alexpantoja.prueba_inditex.domain.model.valueobject.Money;
 import com.alexpantoja.prueba_inditex.domain.model.valueobject.PriceId;
@@ -25,11 +24,6 @@ public interface PriceMapper {
   @Named("toPriceId")
   static PriceId toPriceId(Long id) {
     return new PriceId(id);
-  }
-
-  @Named("toBrandId")
-  static BrandId toBrandId(Long id) {
-    return new BrandId(id);
   }
 
   @Named("toProductId")

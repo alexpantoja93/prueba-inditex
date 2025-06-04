@@ -71,6 +71,6 @@ public class PriceController {
     var price =
         priceQueryService.getApplicablePrice(
             new BrandId(brandId), new ProductId(productId), applicationDate);
-    return ResponseEntity.ok(priceResponseMapper.toResponse(price));
+    return ResponseEntity.ok(priceResponseMapper.toResponse(price, applicationDate));
   }
 }

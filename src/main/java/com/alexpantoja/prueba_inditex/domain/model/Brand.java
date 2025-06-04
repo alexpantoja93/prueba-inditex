@@ -1,5 +1,6 @@
 package com.alexpantoja.prueba_inditex.domain.model;
 
+import com.alexpantoja.prueba_inditex.domain.model.valueobject.BrandId;
 import lombok.*;
 
 @Data
@@ -7,6 +8,6 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Brand {
-  private Long brandId;
+  private BrandId brandId;
   private String description;
 }
