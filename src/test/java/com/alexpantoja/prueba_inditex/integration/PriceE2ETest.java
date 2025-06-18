@@ -22,7 +22,7 @@ class PriceE2ETest {
   @Test
   @DisplayName("Should return expected price response for valid inputs")
   void shouldReturnExpectedPriceResponse() {
-    var url = BASE_URL + "?product_id=35455&brand_id=1&application_date=2020-06-14T10:00:00";
+    var url = BASE_URL + "?product_id=35455&brand_id=1&application_date=2020-06-14T10:00:00Z";
     var response = restTemplate.getForEntity(url, String.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
@@ -35,7 +35,7 @@ class PriceE2ETest {
   @Test
   @DisplayName("Should return 404 Not Found when no applicable price exists")
   void shouldReturn404WhenPriceNotFound() {
-    var url = BASE_URL + "?product_id=99999&brand_id=1&application_date=2025-01-01T00:00:00";
+    var url = BASE_URL + "?product_id=99999&brand_id=1&application_date=2025-01-01T00:00:00Z";
     var response = restTemplate.getForEntity(url, String.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
@@ -45,7 +45,7 @@ class PriceE2ETest {
   @Test
   @DisplayName("Should return 400 Bad Request for invalid product_id parameter")
   void shouldReturn400ForInvalidParameters() {
-    var url = BASE_URL + "?product_id=abc&brand_id=1&application_date=2025-01-01T00:00:00";
+    var url = BASE_URL + "?product_id=abc&brand_id=1&application_date=2025-01-01T00:00:00Z";
     var response = restTemplate.getForEntity(url, String.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
@@ -55,7 +55,7 @@ class PriceE2ETest {
   @Test
   @DisplayName("Should return price with highest priority when multiple matches exist")
   void shouldReturnPriceWithHighestPriorityWhenConflictsExist() {
-    var url = BASE_URL + "?product_id=35455&brand_id=1&application_date=2020-06-14T16:00:00";
+    var url = BASE_URL + "?product_id=35455&brand_id=1&application_date=2020-06-14T16:00:00Z";
     var response = restTemplate.getForEntity(url, String.class);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);

@@ -1,0 +1,103 @@
+openapi: 3.0.3
+info:
+  title: Prueba Inditex API
+  version: 1.0.0
+  description: API REST para consultar el precio aplicable según marca, producto y fecha.
+
+paths:
+  /api/prices:
+    get:
+      tags:
+        - Prices
+      operationId: getPrice
+      summary: Obtener precio aplicable
+      description: Retorna el precio aplicable en base a marca, producto y fecha.
+      parameters:
+        - name: application_date
+          in: query
+          required: true
+          description: "Fecha y hora de aplicación (ejemplo: 2020-06-14T10:00:00)"
+          schema:
+            type: string
+            format: date-time
+        - name: product_id
+          in: query
+          required: true
+          description: ID del producto
+          schema:
+            type: integer
+        - name: brand_id
+          in: query
+          required: true
+          description: ID de la marca
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Precio encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceResponse'
+        '400':
+          description: Error en parámetros de entrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Precio no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error inesperado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Prices
+    description: API para consultar precios
+
+components:
+  schemas:
+    PriceResponse:
+      type: object
+      properties:
+        productId:
+          type: integer
+          example: 35455
+        brandId:
+          type: integer
+          example: 1
+        rateCode:
+          type: integer
+          example: 2
+        applicationDate:
+          type: string
+          format: date-time
+          example: 2020-06-14T10:00:00
+        price:
+          type: number
+          format: double
+          example: 35.50
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          example: 2025-06-17T19:20:30
+        status:
+          type: integer
+          example: 404
+        error:
+          type: string
+          example: "Price Not Found"
+        message:
+          type: string
+          example: "No applicable price for product 35455 and brand 1"

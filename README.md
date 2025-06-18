@@ -41,6 +41,26 @@ Consulta el precio aplicable de un producto para una marca y una fecha dada.
 
 ---
 
+## 🐳 Docker
+
+Este proyecto incluye un `Dockerfile` basado en multi-stage build. Permite compilar y ejecutar la aplicación Spring Boot directamente desde Docker, sin necesidad de tener Java ni Maven instalados localmente.
+
+### 🔧 Requisitos previos
+
+- Docker instalado y corriendo (Docker Desktop o Docker Engine).
+- Permisos para ejecutar comandos `docker`.
+
+### 📦 Construcción de la imagen y ejecución de la aplicación
+
+1. Abre una terminal en la raíz del proyecto (donde está el `Dockerfile`).
+2. Ejecuta:
+
+```bash
+docker build -t prueba-inditex-app .
+docker run -p 8080:8080 prueba-inditex-app
+```
+---
+
 #### 🔸 Ejemplo de petición
 
 ```bash

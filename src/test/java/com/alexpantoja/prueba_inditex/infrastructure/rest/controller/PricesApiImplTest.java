@@ -5,14 +5,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.alexpantoja.generated.model.PriceResponse;
 import com.alexpantoja.prueba_inditex.application.service.PriceQueryService;
 import com.alexpantoja.prueba_inditex.domain.exception.PriceNotFoundException;
 import com.alexpantoja.prueba_inditex.domain.model.Price;
 import com.alexpantoja.prueba_inditex.domain.model.valueobject.*;
-import com.alexpantoja.prueba_inditex.infrastructure.rest.dto.PriceResponse;
-import com.alexpantoja.prueba_inditex.infrastructure.rest.mapper.PriceResponseMapper;
+import com.alexpantoja.prueba_inditex.infrastructure.rest.mapper.GeneratedPriceResponseMapper;
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +20,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-@WebMvcTest(PriceController.class)
-class PriceControllerTest {
+@WebMvcTest(PricesApiImpl.class)
+class PricesApiImplTest {
 
   private static final String PRICES_ENDPOINT = "/api/prices";
 
@@ -29,50 +29,50 @@ class PriceControllerTest {
 
   @MockBean private PriceQueryService priceQueryService;
 
-  @MockBean private PriceResponseMapper priceResponseMapper;
+  @MockBean private GeneratedPriceResponseMapper generatedPriceResponseMapper;
 
   @Test
-  @DisplayName("Should return price for 2020-06-14T10:00")
+  @DisplayName("Should return price for 2020-06-14T10:00Z")
   void givenValidParams_whenTimeIs20200614T1000_thenReturnRate1() throws Exception {
     simulateRequest(
-        "2020-06-14T10:00:00", 1, 35455, 1, BigDecimal.valueOf(35.50), "2020-06-14T09:00:00");
+        "2020-06-14T10:00:00Z", 1, 35455, 1, new BigDecimal("35.50"), "2020-06-14T09:00:00Z");
   }
 
   @Test
-  @DisplayName("Should return price for 2020-06-14T16:00")
+  @DisplayName("Should return price for 2020-06-14T16:00Z")
   void givenValidParams_whenTimeIs20200614T1600_thenReturnRate2() throws Exception {
     simulateRequest(
-        "2020-06-14T16:00:00", 1, 35455, 2, BigDecimal.valueOf(25.45), "2020-06-14T15:00:00");
+        "2020-06-14T16:00:00Z", 1, 35455, 2, new BigDecimal("25.45"), "2020-06-14T15:00:00Z");
   }
 
   @Test
-  @DisplayName("Should return price for 2020-06-14T21:00")
+  @DisplayName("Should return price for 2020-06-14T21:00Z")
   void givenValidParams_whenTimeIs20200614T2100_thenReturnRate1() throws Exception {
     simulateRequest(
-        "2020-06-14T21:00:00", 1, 35455, 1, BigDecimal.valueOf(35.50), "2020-06-14T20:00:00");
+        "2020-06-14T21:00:00Z", 1, 35455, 1, new BigDecimal("35.50"), "2020-06-14T20:00:00Z");
   }
 
   @Test
-  @DisplayName("Should return price for 2020-06-15T10:00")
+  @DisplayName("Should return price for 2020-06-15T10:00Z")
   void givenValidParams_whenTimeIs20200615T1000_thenReturnRate3() throws Exception {
     simulateRequest(
-        "2020-06-15T10:00:00", 1, 35455, 3, BigDecimal.valueOf(30.50), "2020-06-15T09:00:00");
+        "2020-06-15T10:00:00Z", 1, 35455, 3, new BigDecimal("30.50"), "2020-06-15T09:00:00Z");
   }
 
   @Test
-  @DisplayName("Should return price for 2020-06-16T21:00")
+  @DisplayName("Should return price for 2020-06-16T21:00Z")
   void givenValidParams_whenTimeIs20200616T2100_thenReturnRate4() throws Exception {
     simulateRequest(
-        "2020-06-16T21:00:00", 1, 35455, 4, BigDecimal.valueOf(38.95), "2020-06-16T20:00:00");
+        "2020-06-16T21:00:00Z", 1, 35455, 4, new BigDecimal("38.95"), "2020-06-16T20:00:00Z");
   }
 
   @Test
   @DisplayName("Should return 404 when price not found")
   void givenNonExistentProduct_whenRequestingPrice_thenReturn404() throws Exception {
-    var dateTimeStr = "2020-06-17T10:00:00";
+    var dateTimeStr = "2020-06-17T10:00:00Z";
     var brandId = 1;
     var productId = 99999L;
-    var applicationDate = LocalDateTime.parse(dateTimeStr);
+    var applicationDate = OffsetDateTime.parse(dateTimeStr).toLocalDateTime();
 
     when(priceQueryService.getApplicablePrice(
             new BrandId((long) brandId), new ProductId(productId), applicationDate))
@@ -97,7 +97,7 @@ class PriceControllerTest {
     mockMvc
         .perform(
             get(PRICES_ENDPOINT)
-                .param("application_date", "2020-06-14T10:00:00")
+                .param("application_date", "2020-06-14T10:00:00Z")
                 .param("product_id", "abc")
                 .param("brand_id", "1"))
         .andExpect(status().isBadRequest())
@@ -109,33 +109,41 @@ class PriceControllerTest {
 
   private void simulateRequest(
       String dateTimeStr,
-      int brandId,
-      long productId,
-      int rateCode,
+      Integer brandId,
+      Integer productId,
+      Integer rateCode,
       BigDecimal price,
       String expectedStartDate)
       throws Exception {
-    var applicationDate = LocalDateTime.parse(dateTimeStr);
-    var startDate = LocalDateTime.parse(expectedStartDate);
+
+    var applicationDate = OffsetDateTime.parse(dateTimeStr);
+    var startDate = OffsetDateTime.parse(expectedStartDate);
     var endDate = applicationDate.plusHours(1);
 
     var mockPrice =
         Price.of(
             new PriceId(1L),
-            new BrandId((long) brandId),
-            new ProductId(productId),
+            new BrandId(brandId.longValue()),
+            new ProductId(productId.longValue()),
             0,
             new Money(price, "EUR"),
-            new DateRange(startDate, endDate));
+            new DateRange(startDate.toLocalDateTime(), endDate.toLocalDateTime()));
 
-    var mockResponse =
-        new PriceResponse(productId, (long) brandId, rateCode, applicationDate, price);
+    var mockResponse = new PriceResponse();
+    mockResponse.setProductId(productId);
+    mockResponse.setBrandId(brandId);
+    mockResponse.setRateCode(rateCode);
+    mockResponse.setApplicationDate(applicationDate);
+    mockResponse.setPrice(price.doubleValue());
 
     when(priceQueryService.getApplicablePrice(
-            new BrandId((long) brandId), new ProductId(productId), applicationDate))
+            new BrandId(brandId.longValue()),
+            new ProductId(productId.longValue()),
+            applicationDate.toLocalDateTime()))
         .thenReturn(mockPrice);
 
-    when(priceResponseMapper.toResponse(mockPrice, applicationDate)).thenReturn(mockResponse);
+    when(generatedPriceResponseMapper.toResponse(mockPrice, applicationDate.toLocalDateTime()))
+        .thenReturn(mockResponse);
 
     mockMvc
         .perform(
@@ -148,18 +156,5 @@ class PriceControllerTest {
         .andExpect(jsonPath("$.brandId").value(brandId))
         .andExpect(jsonPath("$.rateCode").value(rateCode))
         .andExpect(jsonPath("$.applicationDate").value(dateTimeStr));
-  }
-
-  @Test
-  @DisplayName("Should return 400 Bad Request when product_id is invalid")
-  void shouldReturnBadRequestWhenProductIdIsInvalid() throws Exception {
-    mockMvc
-        .perform(
-            get(PRICES_ENDPOINT)
-                .param("application_date", "2020-06-14T10:00:00")
-                .param("product_id", "INVALID")
-                .param("brand_id", "1"))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.error").value("Bad Request"));
   }
 }
