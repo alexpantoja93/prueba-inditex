@@ -1,0 +1,19 @@
+# Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDEs
+*.iml
+.idea/
+.vscode/
+
+# Git
+.git/
+.gitignore
+
+# Sistema
+.DS_Store
+*.log
+
+# CI/CD
+.github/

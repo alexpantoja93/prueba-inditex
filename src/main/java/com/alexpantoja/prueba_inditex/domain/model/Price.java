@@ -43,8 +43,4 @@ public class Price {
       DateRange dateRange) {
     return new Price(priceId, brandId, productId, priority, money, dateRange);
   }
-
-  public boolean isApplicableAt(java.time.LocalDateTime dateTime) {
-    return dateRange.includes(dateTime);
-  }
 }
