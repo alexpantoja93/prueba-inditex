@@ -6,17 +6,16 @@ import com.alexpantoja.prueba_inditex.application.service.PriceQueryService;
 import com.alexpantoja.prueba_inditex.domain.model.valueobject.BrandId;
 import com.alexpantoja.prueba_inditex.domain.model.valueobject.ProductId;
 import com.alexpantoja.prueba_inditex.infrastructure.rest.mapper.GeneratedPriceResponseMapper;
-
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 
-@Slf4j
-@Controller
+@RestController
 @RequiredArgsConstructor
+@Slf4j
 public class PricesApiImpl implements ApiPrices {
 
   private final PriceQueryService priceQueryService;
@@ -36,9 +35,7 @@ public class PricesApiImpl implements ApiPrices {
 
     var domainPrice =
         priceQueryService.getApplicablePrice(
-            new BrandId(brandId.longValue()),
-            new ProductId(productId.longValue()),
-                localDateTime);
+            new BrandId(brandId.longValue()), new ProductId(productId.longValue()), localDateTime);
 
     var response = mapper.toResponse(domainPrice, localDateTime);
     return ResponseEntity.ok(response);
