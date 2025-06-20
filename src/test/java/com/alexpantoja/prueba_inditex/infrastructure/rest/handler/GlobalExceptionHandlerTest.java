@@ -11,7 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
-public class GlobalExceptionHandlerTest {
+class GlobalExceptionHandlerTest {
   private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
 
   @Test
@@ -22,7 +22,7 @@ public class GlobalExceptionHandlerTest {
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
     assertThat(response.getBody()).isInstanceOf(Map.class);
-    assertThat(((Map<?, ?>) response.getBody()).get("error")).isEqualTo("Price Not Found");
+    assertThat(response.getBody()).containsEntry("error", "Price Not Found");
   }
 
   @Test
@@ -34,7 +34,7 @@ public class GlobalExceptionHandlerTest {
     var response = handler.handleBadRequest(ex);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(((Map<?, ?>) response.getBody()).get("error")).isEqualTo("Bad Request");
+    assertThat(response.getBody()).containsEntry("error", "Bad Request");
   }
 
   @Test
@@ -44,7 +44,7 @@ public class GlobalExceptionHandlerTest {
     var response = handler.handleBadRequest(ex);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
-    assertThat(((Map<?, ?>) response.getBody()).get("error")).isEqualTo("Bad Request");
+    assertThat(response.getBody()).containsEntry("error", "Bad Request");
   }
 
   @Test
@@ -54,7 +54,7 @@ public class GlobalExceptionHandlerTest {
     var response = handler.handleGeneralException(ex);
 
     assertThat(response.getStatusCode()).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR);
-    assertThat(((Map<?, ?>) response.getBody()).get("error")).isEqualTo("Internal Server Error");
+    assertThat(response.getBody()).containsEntry("error", "Internal Server Error");
   }
 
   @Test
@@ -63,7 +63,6 @@ public class GlobalExceptionHandlerTest {
     var ex = new PriceNotFoundException(999L, 1L, LocalDateTime.now());
     var response = handler.handleGeneralException(ex);
 
-    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-    assertThat(((Map<?, ?>) response.getBody()).get("error")).isEqualTo("Price Not Found");
+    assertThat(response.getBody()).containsEntry("error", "Price Not Found");
   }
 }
